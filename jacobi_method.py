@@ -7,7 +7,7 @@ def jacobi_method_verbose(A, b, tol=1e-5, max_iterations=100):
     x = np.zeros(n)  # Початкове наближення (вектор нулів)
     x_new = np.zeros(n)
     table = PrettyTable()
-    table.field_names = ["Ітерація"] + [f"x_{i+1}" for i in range(n)] + ["Максимальна зміна"]
+    table.field_names = ["Ітерація"] + [f"x_{i+1}" for i in range(n)] + ["Максимальна змінна"]
     
     for iteration in range(max_iterations):
         max_change = 0  # Для збереження максимальної зміни між ітераціями

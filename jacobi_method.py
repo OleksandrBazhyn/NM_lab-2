@@ -23,9 +23,12 @@ def jacobi_method(A, b, tol=1e-5, max_iterations=100):
     return x, max_iterations
 
 # Generation of a 4x4 random matrix and a vector of the right side
-np.random.seed(0)
-matrix = np.random.randint(-9, 10, (4, 4))
-vector = np.random.randint(-9, 10, (4,))
+matrix = np.array([[-9, -2, -6, 1],
+                   [4, -9, 1, 0],
+                   [1, -1, 6, -1],
+                   [-5, 2, -1, -8]])
+
+vector = np.array([2, -1, 6, 4])
 
 # Check and modify for diagonal dominance (if necessary)
 def is_diagonally_dominant(mat):

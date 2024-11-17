@@ -38,9 +38,12 @@ matrix = np.array([[-9, -2, -6, 1],
 
 vector = np.array([2, -1, 6, 4])
 
-# Виконання методу Якобі з детальним виведенням
-jacobi_solution, num_iterations = jacobi_method_verbose(matrix, vector, tol=1e-5)
-
 print("Розв'язок методом Якобі:")
+tol_input = input("Будь ласка, введіть бажану точність обчислень: 10 в степені -")
+tol = 10 ** (-float(tol_input))
+
+# Виконання методу Якобі з детальним виведенням
+jacobi_solution, num_iterations = jacobi_method_verbose(matrix, vector, tol)
+
 print("Вектор розв'язку:", jacobi_solution)
 print("Кількість ітерацій:", num_iterations)

@@ -47,7 +47,7 @@ def check_convergence(matrix):
     return True
 
 # Розв'язання системи методом прогонки (метод Томаса)
-def solve_tridiagonal(matrix):
+def solve_tridiagonal(matrix, epsilon):
     size = matrix.shape[0]
 
     if not is_tridiagonal_matrix(matrix[:, :-1]):
@@ -96,12 +96,21 @@ if __name__ == "__main__":
     file_name = "matrix_ta.txt"
     matrix = read_matrix_from_file(file_name)
 
-
     if matrix is not None:
         print("Input Matrix:")
         display_matrix(matrix)
 
-        solutions = solve_tridiagonal(matrix)
+        # Введення точності
+        while True:
+            try:
+                epsilon = float(input("Enter the desired precision (e.g., 1e-8): "))
+                if epsilon <= 0:
+                    raise ValueError("Precision must be a positive number.")
+                break
+            except ValueError as e:
+                print(f"Invalid input: {e}. Please try again.")
+
+        solutions = solve_tridiagonal(matrix, epsilon)
         if solutions is not None:
             print("\nThe solution is:")
             for i, sol in enumerate(solutions, start=1):
@@ -119,7 +128,7 @@ if __name__ == "__main__":
             print(residual)
 
             # Перевірка точності розв'язку
-            if np.allclose(b, result, atol=1e-8):  # Точність до 1e-8
+            if np.allclose(b, result, atol=epsilon):  # Точність за введеним epsilon
                 print("Solution is correct.")
             else:
                 print("Solution has errors.")

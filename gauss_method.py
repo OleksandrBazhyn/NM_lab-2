@@ -1,59 +1,74 @@
 import numpy as np
-from prettytable import PrettyTable
 
-def print_table(matrix, step):
-    """Функція для друку матриці у вигляді таблиці."""
-    n = matrix.shape[0]
-    table = PrettyTable()
-    headers = [f"x{i + 1}" for i in range(n)] + ["b"]
-    table.field_names = headers
+def load_matrix(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            matrix = []
+            for line in file:
+                if line.strip():
+                    matrix.append(list(map(float, line.split())))
+            return np.array(matrix)
+    except FileNotFoundError:
+        print(f"Помилка: Неможливо відкрити файл {file_path}")
+        return None
+
+def gaussian_elimination(matrix):
+    size = len(matrix)
+    augmented_matrix = matrix.copy()
+    determinant = 1
+    inverse_matrix = np.eye(size)
+
+    for k in range(size):
+        pivot = augmented_matrix[k, k]
+        determinant *= pivot
+        augmented_matrix[k] /= pivot
+        inverse_matrix[k] /= pivot
+
+        for i in range(k + 1, size):
+            factor = augmented_matrix[i, k]
+            augmented_matrix[i] -= augmented_matrix[k] * factor
+            inverse_matrix[i] -= inverse_matrix[k] * factor
+
+    solutions = np.zeros(size)
+    solutions[-1] = augmented_matrix[-1, -1]  # Останній елемент правої частини
+
+    for i in range(size - 2, -1, -1):
+        solutions[i] = augmented_matrix[i, -1] - np.dot(
+            augmented_matrix[i, i + 1:size], solutions[i + 1:]
+        )
+
+    for i in range(size - 1, 0, -1):
+        for j in range(i):
+            factor = augmented_matrix[j, i]
+            augmented_matrix[j] -= augmented_matrix[i] * factor
+            inverse_matrix[j] -= inverse_matrix[i] * factor
+
+    return solutions, determinant, inverse_matrix
+
+def print_matrix(matrix):
     for row in matrix:
-        table.add_row([f"{x:.4f}" for x in row])
-    print(f"\nКрок {step}:\n")
-    print(table)
+        print(" ".join(f"{val:.6f}" for val in row))
 
-def gauss_elimination_verbose(matrix, vector):
-    """
-    Метод Гаусса для розв'язання СЛАР з виведенням деталей.
-    matrix - матриця коефіцієнтів (n x n)
-    vector - вектор правої частини (n)
-    """
-    n = len(vector)
-    # Розширена матриця
-    augmented_matrix = np.hstack((matrix, vector.reshape(-1, 1)))
-    print("Початкова розширена матриця:")
-    print_table(augmented_matrix, "Початок")
+def main():
+    matrix = load_matrix("matrix_g.txt")
+    if matrix is None:
+        return
 
-    # Прямий хід: приведення до трикутного вигляду
-    for i in range(n):
-        # Пошук головного елемента в стовпці
-        max_row = i + np.argmax(abs(augmented_matrix[i:, i]))
-        augmented_matrix[[i, max_row]] = augmented_matrix[[max_row, i]]  # Обмін рядків
+    size = len(matrix)
+    if matrix.shape[1] != size + 1:
+        print("Помилка: Невірна кількість стовпців у матриці.")
+        return
 
-        # Нормалізація головного елемента
-        for j in range(i + 1, n):
-            factor = augmented_matrix[j, i] / augmented_matrix[i, i]
-            augmented_matrix[j, i:] -= factor * augmented_matrix[i, i:]
-        print_table(augmented_matrix, f"Прямий хід (крок {i + 1})")
+    solutions, determinant, inverse_matrix = gaussian_elimination(matrix)
 
-    # Зворотний хід: знаходження розв'язку
-    x = np.zeros(n)
-    for i in range(n - 1, -1, -1):
-        x[i] = (augmented_matrix[i, -1] - np.dot(augmented_matrix[i, i + 1:n], x[i + 1:])) / augmented_matrix[i, i]
-        print(f"\nРозрахунок x[{i + 1}]: {x[i]:.4f}")
+    print("\nThe solution to the system of equations is:")
+    for i, solution in enumerate(solutions, start=1):
+        print(f"x{i} = {solution:.6f}")
 
-    return x
+    print(f"\nThe determinant of the matrix is: {determinant:.6f}")
 
-# Вхідні дані
-matrix = np.array([
-    [-9, -2, -6, 1],
-    [4, -9, 1, 0],
-    [1, -1, 6, -1],
-    [-5, 2, -1, -8]
-], dtype=float)
+    print("\nThe inverse matrix is:")
+    print_matrix(inverse_matrix)
 
-vector = np.array([2, -1, 6, 4], dtype=float)
-
-# Розв'язання методом Гаусса з детальним виведенням
-solution = gauss_elimination_verbose(matrix, vector)
-print("\nРозв'язок СЛАР методом Гаусса:", solution)
+if __name__ == "__main__":
+    main()

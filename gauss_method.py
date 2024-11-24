@@ -1,74 +1,87 @@
 import numpy as np
 
 def load_matrix(file_path):
-    try:
-        with open(file_path, 'r') as file:
-            matrix = []
-            for line in file:
-                if line.strip():
-                    matrix.append(list(map(float, line.split())))
-            return np.array(matrix)
-    except FileNotFoundError:
-        print(f"Помилка: Неможливо відкрити файл {file_path}")
-        return None
+    """Завантажує матрицю з файлу"""
+    matrix = []
+    with open(file_path, 'r') as file:
+        for line in file:
+            if line.strip():
+                row = list(map(float, line.split()))
+                matrix.append(row)
+    return np.array(matrix)
+
+def print_matrix(matrix, title="Matrix"):
+    """Виводить матрицю з форматованим виведенням"""
+    print(f"\n{title}:")
+    for row in matrix:
+        print(' '.join(f"{val: .2f}" for val in row))
 
 def gaussian_elimination(matrix):
-    size = len(matrix)
-    augmented_matrix = matrix.copy()
-    determinant = 1
-    inverse_matrix = np.eye(size)
-
-    for k in range(size):
-        pivot = augmented_matrix[k, k]
-        determinant *= pivot
-        augmented_matrix[k] /= pivot
-        inverse_matrix[k] /= pivot
-
-        for i in range(k + 1, size):
-            factor = augmented_matrix[i, k]
-            augmented_matrix[i] -= augmented_matrix[k] * factor
-            inverse_matrix[i] -= inverse_matrix[k] * factor
-
+    """Метод Гаусса для розв'язання системи лінійних рівнянь"""
+    size = matrix.shape[0]
+    inverse_matrix = np.identity(size)
+    determinant = 1.0
     solutions = np.zeros(size)
-    solutions[-1] = augmented_matrix[-1, -1]  # Останній елемент правої частини
 
+    # Forward elimination (прямий хід)
+    for i in range(size):
+        pivot = matrix[i, i]
+        determinant *= pivot
+        matrix[i] /= pivot
+        inverse_matrix[i] /= pivot
+
+        print_matrix(matrix, f"Після нормалізації рядка {i + 1}")
+        print_matrix(inverse_matrix, "Обернена матриця після нормалізації")
+        
+        for j in range(i + 1, size):
+            factor = matrix[j, i]
+            matrix[j] -= matrix[i] * factor
+            inverse_matrix[j] -= inverse_matrix[i] * factor
+
+            print_matrix(matrix, f"Після усунення елемента {i + 1}, {j + 1}")
+            print_matrix(inverse_matrix, "Обернена матриця після усунення елемента")
+
+    # Backward substitution (зворотний хід)
+    print("\nВиконується зворотне підстановлення...")
+    solutions[size - 1] = matrix[size - 1, size]
     for i in range(size - 2, -1, -1):
-        solutions[i] = augmented_matrix[i, -1] - np.dot(
-            augmented_matrix[i, i + 1:size], solutions[i + 1:]
-        )
+        sum = 0
+        for j in range(i + 1, size):
+            sum += matrix[i, j] * solutions[j]
+        solutions[i] = matrix[i, size] - sum
 
-    for i in range(size - 1, 0, -1):
+    print(f"\nРішення: {solutions}")
+
+    # Reversing the process for inverse matrix (обчислення оберненої матриці)
+    for i in range(size - 1, -1, -1):
         for j in range(i):
-            factor = augmented_matrix[j, i]
-            augmented_matrix[j] -= augmented_matrix[i] * factor
+            factor = matrix[j, i]
+            matrix[j] -= matrix[i] * factor
             inverse_matrix[j] -= inverse_matrix[i] * factor
 
     return solutions, determinant, inverse_matrix
 
-def print_matrix(matrix):
-    for row in matrix:
-        print(" ".join(f"{val:.6f}" for val in row))
-
 def main():
+    # Завантажуємо матрицю з файлу
     matrix = load_matrix("matrix_g.txt")
-    if matrix is None:
-        return
+    size = matrix.shape[0]
+    print_matrix(matrix, "Початкова матриця системи рівнянь")
 
-    size = len(matrix)
-    if matrix.shape[1] != size + 1:
-        print("Помилка: Невірна кількість стовпців у матриці.")
-        return
+    # Створюємо додаткову матрицю для вирішення
+    matrix_augmented = np.hstack((matrix[:, :-1], matrix[:, -1][:, np.newaxis]))
 
-    solutions, determinant, inverse_matrix = gaussian_elimination(matrix)
+    # Розв'язуємо систему рівнянь методом Гаусса
+    solutions, determinant, inverse_matrix = gaussian_elimination(matrix_augmented)
 
-    print("\nThe solution to the system of equations is:")
-    for i, solution in enumerate(solutions, start=1):
-        print(f"x{i} = {solution:.6f}")
+    # Виводимо результат
+    print("\nРішення системи рівнянь:")
+    for i, sol in enumerate(solutions, 1):
+        print(f"x{i} = {sol:.2f}")
 
-    print(f"\nThe determinant of the matrix is: {determinant:.6f}")
+    print(f"\nДетермінант матриці: {determinant:.2f}")
 
-    print("\nThe inverse matrix is:")
-    print_matrix(inverse_matrix)
+    print("\nОбернена матриця:")
+    print_matrix(inverse_matrix, "Обернена матриця")
 
 if __name__ == "__main__":
     main()

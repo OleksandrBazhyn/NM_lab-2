@@ -35,7 +35,7 @@ def is_tridiagonal_matrix(matrix):
                 return False
     return True
 
-# Перевірка на збіжність
+# Перевірка на збіжність (діагональне домінування)
 def check_convergence(matrix):
     size = len(matrix)
     for i in range(size):
@@ -47,17 +47,27 @@ def check_convergence(matrix):
     return True
 
 # Розв'язання системи методом прогонки (метод Томаса)
-def solve_tridiagonal(matrix, epsilon):
+def solve_tridiagonal(matrix, epsilon=1e-8):
     size = matrix.shape[0]
 
-    if not is_tridiagonal_matrix(matrix[:, :-1]):
+    # Перевірка розміру матриці
+    if matrix.shape[1] != size + 1:
+        print("Error: Input matrix must be of size n x (n+1) for tridiagonal systems.")
+        return None
+
+    A = matrix[:, :-1]
+    b = matrix[:, -1]
+
+    # Перевірка тридіагональності
+    if not is_tridiagonal_matrix(A):
         print("Error: The matrix is not tridiagonal. This method only works for tridiagonal matrices.")
         return None
     else:
         print("Matrix is tridiagonal because non-zero elements exist only on the main diagonal and adjacent diagonals.")
 
-    if not check_convergence(matrix[:, :-1]):
-        print("Warning: The matrix might not guarantee convergence of the solution.")
+    # Перевірка діагонального домінування
+    if not check_convergence(A):
+        print("Warning: The matrix might not guarantee convergence, but the method will attempt to solve it.")
     else:
         print("Matrix satisfies the diagonal dominance condition, ensuring convergence.")
 
@@ -66,22 +76,28 @@ def solve_tridiagonal(matrix, epsilon):
 
     print("\nПрямий хід:")
     # Ініціалізація
-    alpha[0] = -matrix[0, 1] / matrix[0, 0]
-    beta[0] = matrix[0, -1] / matrix[0, 0]
+    if abs(A[0, 0]) < epsilon:
+        print("Error: Zero or near-zero pivot at the first row. Cannot proceed.")
+        return None
+    alpha[0] = -A[0, 1] / A[0, 0]
+    beta[0] = b[0] / A[0, 0]
     print(f"Step 1: alpha[0] = {alpha[0]:.4f}, beta[0] = {beta[0]:.4f}")
 
     # Прямий хід
     for i in range(1, size):
-        denominator = matrix[i, i] + matrix[i, i - 1] * alpha[i - 1]
+        denominator = A[i, i] + A[i, i - 1] * alpha[i - 1]
+        if abs(denominator) < epsilon:
+            print(f"Error: Zero or near-zero pivot detected at row {i + 1}. Cannot proceed.")
+            return None
         if i < size - 1:
-            alpha[i] = -matrix[i, i + 1] / denominator
-        beta[i] = (matrix[i, -1] - matrix[i, i - 1] * beta[i - 1]) / denominator
+            alpha[i] = -A[i, i + 1] / denominator
+        beta[i] = (b[i] - A[i, i - 1] * beta[i - 1]) / denominator
         print(f"Step {i + 1}: alpha[{i}] = {alpha[i]:.4f}, beta[{i}] = {beta[i]:.4f}")
 
     # Зворотній хід
     print("\nЗворотній хід:")
     solutions = np.zeros(size)
-    solutions[-1] = beta[-1]  # Останній елемент
+    solutions[-1] = beta[-1]
     print(f"Step {size}: x[{size}] = {solutions[-1]:.4f}")
 
     for i in range(size - 2, -1, -1):
@@ -128,7 +144,7 @@ if __name__ == "__main__":
             print(residual)
 
             # Перевірка точності розв'язку
-            if np.allclose(b, result, atol=epsilon):  # Точність за введеним epsilon
+            if np.allclose(b, result, atol=epsilon):
                 print("Solution is correct.")
             else:
                 print("Solution has errors.")

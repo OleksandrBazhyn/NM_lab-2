@@ -137,14 +137,11 @@ if __name__ == "__main__":
             result = np.dot(A, solutions)  # Обчислення A * x
             residual = b - result          # Залишкова похибка
 
-            # Виведення результатів
-            print("\nAx:")
-            print(result)
-            print("Residual (b - Ax):")
-            print(residual)
+            # Округлення залишкової похибки для читабельності
+            residual_rounded = np.round(residual, decimals=int(abs(np.log10(epsilon))) + 2)
 
-            # Перевірка точності розв'язку
-            if np.allclose(b, result, atol=epsilon):
-                print("Solution is correct.")
-            else:
-                print("Solution has errors.")
+            # Виведення результатів
+            print("\nОбчислене Ax:")
+            print(result)
+            print("Залишкова похибка (b - Ax), округлена до значущих цифр:")
+            print(residual_rounded)

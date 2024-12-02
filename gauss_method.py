@@ -107,7 +107,7 @@ def main():
     # Завантажуємо матрицю з файлу
     matrix = load_matrix("matrix_g.txt")
     size = matrix.shape[0]
-    print_matrix(matrix, "Початкова матриця системи рівнянь")
+    print_matrix(matrix, "Початкова розширена матриця системи рівнянь")
 
     # Створюємо додаткову матрицю для вирішення
     matrix_augmented = np.hstack((matrix[:, :-1], matrix[:, -1][:, np.newaxis]))

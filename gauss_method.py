@@ -51,7 +51,7 @@ def print_augmented_with_inverse(augmented_matrix, inverse_matrix, title="Мат
         print(f"{row_A} | {row_b} | {row_inv}")
 
 def gaussian_elimination(matrix):
-    """Метод Гаусса для розв'язання системи лінійних рівнянь"""
+    """Метод Гаусса з частковим вибором головного елемента для розв'язання системи лінійних рівнянь"""
     size = matrix.shape[0]
     inverse_matrix = np.identity(size)
     determinant = 1.0
@@ -59,13 +59,26 @@ def gaussian_elimination(matrix):
 
     # Forward elimination (прямий хід)
     for i in range(size):
+        # Частковий вибір головного елемента
+        max_row = i + np.argmax(np.abs(matrix[i:, i]))
+        if matrix[max_row, i] == 0:
+            raise ValueError("Система рівнянь несумісна або має нескінченну кількість розв'язків.")
+
+        # Переставляємо рядки
+        if max_row != i:
+            matrix[[i, max_row]] = matrix[[max_row, i]]
+            inverse_matrix[[i, max_row]] = inverse_matrix[[max_row, i]]
+            determinant *= -1  # Змінюємо знак детермінанта через перестановку рядків
+
+        # Нормалізація поточного рядка
         pivot = matrix[i, i]
         determinant *= pivot
         matrix[i] /= pivot
         inverse_matrix[i] /= pivot
 
         print_augmented_with_inverse(matrix, inverse_matrix, f"Після нормалізації рядка {i + 1}")
-        
+
+        # Виключення нижче поточного рядка
         for j in range(i + 1, size):
             factor = matrix[j, i]
             matrix[j] -= matrix[i] * factor
@@ -81,7 +94,7 @@ def gaussian_elimination(matrix):
 
     print(f"\nРішення: {solutions}")
 
-    # Reversing the process for inverse matrix (обчислення оберненої матриці)
+    # Зворотній хід для обчислення оберненої матриці
     for i in range(size - 1, -1, -1):
         for j in range(i):
             factor = matrix[j, i]
@@ -109,7 +122,6 @@ def main():
 
     print(f"\nДетермінант матриці: {determinant:.2f}")
 
-    print("\nОбернена матриця:")
     print_matrix(inverse_matrix, "Обернена матриця")
 
 if __name__ == "__main__":

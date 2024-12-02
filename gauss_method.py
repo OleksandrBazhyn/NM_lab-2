@@ -1,4 +1,5 @@
 import numpy as np
+from prettytable import PrettyTable
 
 def load_matrix(file_path):
     """Завантажує матрицю з файлу"""
@@ -24,6 +25,31 @@ def print_matrix(matrix, title="Matrix"):
             # Звичайний вивід
             print(' '.join(f"{val: .2f}" for val in row))
 
+def print_augmented_with_inverse(augmented_matrix, inverse_matrix, title="Матриця з оберненою"):
+    """Виводить розширену матрицю та обернену матрицю у форматі, схожому на об'єднані клітинки"""
+    print(f"\n{title}:")
+
+    # Формуємо заголовки
+    num_cols_A = augmented_matrix.shape[1] - 1
+    num_cols_inv = inverse_matrix.shape[1]
+    header_A = "матриця A".ljust(10 * num_cols_A)
+    header_b = "b".ljust(10)
+    header_inv = "обернена матриця".ljust(10 * num_cols_inv)
+    
+    # Виводимо заголовок таблиці
+    print(f"{header_A} {header_b} {header_inv}")
+
+    # Формуємо рядки таблиці
+    for i in range(augmented_matrix.shape[0]):
+        # Формуємо рядок для матриці A
+        row_A = ' '.join(f"{val:7.2f}" for val in augmented_matrix[i, :-1])
+        # Формуємо рядок для b
+        row_b = f"{augmented_matrix[i, -1]:7.2f}"
+        # Формуємо рядок для оберненої матриці
+        row_inv = ' '.join(f"{val:7.2f}" for val in inverse_matrix[i])
+        # Підключаємо всі частини
+        print(f"{row_A} | {row_b} | {row_inv}")
+
 def gaussian_elimination(matrix):
     """Метод Гаусса для розв'язання системи лінійних рівнянь"""
     size = matrix.shape[0]
@@ -38,25 +64,20 @@ def gaussian_elimination(matrix):
         matrix[i] /= pivot
         inverse_matrix[i] /= pivot
 
-        print_matrix(matrix, f"Після нормалізації рядка {i + 1}")
-        print_matrix(inverse_matrix, "Обернена матриця після нормалізації")
+        print_augmented_with_inverse(matrix, inverse_matrix, f"Після нормалізації рядка {i + 1}")
         
         for j in range(i + 1, size):
             factor = matrix[j, i]
             matrix[j] -= matrix[i] * factor
             inverse_matrix[j] -= inverse_matrix[i] * factor
 
-            print_matrix(matrix, f"Після усунення елемента {i + 1}, {j + 1}")
-            print_matrix(inverse_matrix, "Обернена матриця після усунення елемента")
+            print_augmented_with_inverse(matrix, inverse_matrix, f"Після усунення елемента {i + 1}, {j + 1}")
 
     # Backward substitution (зворотний хід)
     print("\nВиконується зворотне підстановлення...")
-    solutions[size - 1] = matrix[size - 1, size]
+    solutions[size - 1] = matrix[size - 1, -1]
     for i in range(size - 2, -1, -1):
-        sum = 0
-        for j in range(i + 1, size):
-            sum += matrix[i, j] * solutions[j]
-        solutions[i] = matrix[i, size] - sum
+        solutions[i] = matrix[i, -1] - np.dot(matrix[i, i+1:size], solutions[i+1:size])
 
     print(f"\nРішення: {solutions}")
 

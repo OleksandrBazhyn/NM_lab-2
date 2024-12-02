@@ -11,10 +11,18 @@ def load_matrix(file_path):
     return np.array(matrix)
 
 def print_matrix(matrix, title="Matrix"):
-    """Виводить матрицю з форматованим виведенням"""
+    """Виводить матрицю з вертикальною рискою, якщо це розширена матриця"""
     print(f"\n{title}:")
+    rows, cols = matrix.shape
+    # Якщо кількість стовпців на 1 більша за кількість рядків, це розширена матриця
+    is_augmented = cols == rows + 1
     for row in matrix:
-        print(' '.join(f"{val: .2f}" for val in row))
+        if is_augmented:
+            # Вивід із розділенням основної частини і правого вектора
+            print(' '.join(f"{val: .2f}" for val in row[:-1]) + " | " + f"{row[-1]: .2f}")
+        else:
+            # Звичайний вивід
+            print(' '.join(f"{val: .2f}" for val in row))
 
 def gaussian_elimination(matrix):
     """Метод Гаусса для розв'язання системи лінійних рівнянь"""
